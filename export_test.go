@@ -1,6 +1,6 @@
 package coreadblock
 
-// file name exporttest.go does not work! why ??!!
+// file name export_test.go does not work! why ??!!
 var (
 	Out = out
 	Setup = setup
