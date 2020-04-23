@@ -1,9 +1,8 @@
-package test
+package coreadblock
 
 import (
 	"bytes"
 	"context"
-	"github.com/ruijzhan/coreadblock"
 	"testing"
 
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
@@ -13,10 +12,10 @@ import (
 )
 
 func TestCoreAdBlock(t *testing.T) {
-	adblk := coreadblock.CoreAdBlock{Next: test.ErrorHandler(), Url: `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`}
+	adblk := CoreAdBlock{Next: test.ErrorHandler(), Url: `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`}
 
 	b := &bytes.Buffer{}
-	coreadblock.Out = b
+	out = b
 
 	ctx := context.TODO()
 	r := new(dns.Msg)

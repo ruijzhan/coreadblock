@@ -2,9 +2,10 @@ package coreadblock
 
 import (
 	"context"
-	"fmt"
 	"github.com/coredns/coredns/plugin/metrics"
+	"github.com/coredns/coredns/request"
 	"io"
+	"net"
 	"os"
 
 	"github.com/coredns/coredns/plugin"
@@ -26,14 +27,43 @@ type CoreAdBlock struct {
 	Url	 string
 }
 
-func (ab CoreAdBlock) ServeDNS(cxt context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
-	log.Debug("Received response")
+func (ab CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
+	state := request.Request{W:w, Req: r}
+	qname := state.Name()
 
-	fmt.Println(r)
+	var answers []dns.RR
 
-	requestCount.WithLabelValues(metrics.WithServer(cxt)).Inc()
+	switch state.QType() {
+	case dns.TypeA:
+		ips := []net.IP{net.ParseIP("127.0.0.1")}
+		answers = a(qname, 3600, ips)
+	}
 
-	return ab.Next.ServeDNS(cxt, w, r)
+	if len(answers) == 0 {
+		return plugin.NextOrFailure(ab.Name(), ab.Next, ctx, w, r)
+	}
+
+	m := new(dns.Msg)
+	m.SetReply(r)
+	m.Authoritative = true
+	m.Answer = answers
+
+	w.WriteMsg(m)
+
+	requestCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+
+	return ab.Next.ServeDNS(ctx, w, r)
 }
 
 func (_ CoreAdBlock) Name() string { return PLUGIN_NAME }
+
+func a(zone string, ttl uint32, ips []net.IP) []dns.RR {
+	answers := make([]dns.RR, len(ips))
+	for i, ip := range ips {
+		r := new(dns.A)
+		r.Hdr = dns.RR_Header{Name: zone, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: ttl}
+		r.A = ip
+		answers[i] = r
+	}
+	return answers
+}
