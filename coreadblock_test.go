@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"net"
 
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/coredns/coredns/plugin/test"
@@ -23,4 +24,10 @@ func TestCoreAdBlock(t *testing.T) {
 
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 	adblk.ServeDNS(ctx, rec, r)
+	for _, rr := range rec.Msg.Answer {
+		r:= rr.(*dns.A)
+		if !r.A.Equal(net.ParseIP("127.0.0.1")) {
+			t.Fatalf("Expected 127.0.0.1, but got %v", r.A)
+		}
+	}
 }

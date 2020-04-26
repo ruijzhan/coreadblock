@@ -25,6 +25,7 @@ var (
 type CoreAdBlock struct {
 	Next plugin.Handler
 	Url	 string
+	Data *Map
 }
 
 func (ab CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
@@ -52,7 +53,7 @@ func (ab CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 
 	requestCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
 
-	return ab.Next.ServeDNS(ctx, w, r)
+	return dns.RcodeSuccess, nil
 }
 
 func (_ CoreAdBlock) Name() string { return PLUGIN_NAME }

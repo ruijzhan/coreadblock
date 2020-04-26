@@ -27,8 +27,16 @@ func setup(c *caddy.Controller) error  {
 		return nil
 	})
 
+	r, err := openURL(url)
+	if err != nil {
+		panic("Cannot read from url")
+	}
+	defer r.Close()
+	m := newMap()
+	m.parse(r)
+
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
-		return CoreAdBlock{Next: next, Url: url}
+		return CoreAdBlock{Next: next, Url: url, Data: m}
 	})
 
 	return nil
