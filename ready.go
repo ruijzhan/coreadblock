@@ -1,5 +1,5 @@
 package coreadblock
 
-func (_ CoreAdBlock) Ready() bool  {
+func (c CoreAdBlock) Ready() bool  {
 	return true
 }

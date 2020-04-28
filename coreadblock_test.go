@@ -1,33 +1,44 @@
 package coreadblock
 
+
 import (
 	"bytes"
 	"context"
-	"testing"
-	"net"
-
+	"github.com/caddyserver/caddy"
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/coredns/coredns/plugin/test"
-
 	"github.com/miekg/dns"
+	"net"
+	"testing"
 )
 
 func TestCoreAdBlock(t *testing.T) {
-	adblk := CoreAdBlock{Next: test.ErrorHandler(), Url: `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts`}
+	c := caddy.NewTestController("dns", corefile)
+	adblk, err := adblockParse(c)
+	for _, url := range adblk.Urls {
+		if err := adblk.parseHostsURL(url); err != nil{
+			log.Warningf("Failed to parse url %v because %v", url, err )
+		}
+	}
+	if err != nil {
+		t.Fatalf("Expected no error, but got %v", err)
+	}
 
 	b := &bytes.Buffer{}
 	out = b
 
 	ctx := context.TODO()
 	r := new(dns.Msg)
-	r.SetQuestion("example.org", dns.TypeA)
+	r.SetQuestion("cdn.3lift.com", dns.TypeA)
 
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 	adblk.ServeDNS(ctx, rec, r)
-	for _, rr := range rec.Msg.Answer {
-		r:= rr.(*dns.A)
-		if !r.A.Equal(net.ParseIP("127.0.0.1")) {
-			t.Fatalf("Expected 127.0.0.1, but got %v", r.A)
+	if rec.Rcode == dns.RcodeSuccess {
+		for _, rr := range rec.Msg.Answer {
+			r:= rr.(*dns.A)
+			if !r.A.Equal(net.ParseIP(adblk.ResolveIP)) {
+				t.Fatalf("Expected 127.0.0.1, but got %v", r.A)
+			}
 		}
 	}
 }

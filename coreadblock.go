@@ -23,32 +23,36 @@ var (
 
 
 type CoreAdBlock struct {
-	Next plugin.Handler
-	Url	 string
-	Data *Map
+	Next 		plugin.Handler
+	Urls		[]string
+	ResolveIP   string
+	Exceptions  map[string]bool
+	BlockList   map[string]bool
 }
 
-func (ab CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
+func (c CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
 
 	var answers []dns.RR
 
-	switch state.QType() {
-	case dns.TypeA:
-		ips := []net.IP{net.ParseIP("127.0.0.1")}
-		answers = a(qname, 3600, ips)
+	if state.QType() == dns.TypeA {
+		if c.Exceptions[qname] {
+			// do nothing
+		} else if c.BlockList[qname] {
+			ips := []net.IP{net.ParseIP(c.ResolveIP)}
+			answers = a(qname, 3600, ips)
+		}
 	}
 
 	if len(answers) == 0 {
-		return plugin.NextOrFailure(ab.Name(), ab.Next, ctx, w, r)
+		return plugin.NextOrFailure(c.Name(), c.Next, ctx, w, r)
 	}
 
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Authoritative = true
 	m.Answer = answers
-
 	w.WriteMsg(m)
 
 	requestCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
@@ -56,7 +60,7 @@ func (ab CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 	return dns.RcodeSuccess, nil
 }
 
-func (_ CoreAdBlock) Name() string { return PLUGIN_NAME }
+func (c CoreAdBlock) Name() string { return PLUGIN_NAME }
 
 func a(zone string, ttl uint32, ips []net.IP) []dns.RR {
 	answers := make([]dns.RR, len(ips))

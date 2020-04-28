@@ -17,25 +17,17 @@ func parseIP(addr string) net.IP  {
 	return net.ParseIP(addr)
 }
 
-type Map struct {
-	// domains bypassed from adblock
-	bypass    map[string]bool
-
-	nBypass   int
-	// domains to be blocked
-	blocked   map[string]bool
-
-	nBlocked  int
+func (c *CoreAdBlock) parseHostsURL(url string) error  {
+	reader, err := openURL(url)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	c.parseHosts(reader)
+	return nil
 }
 
-func newMap() *Map {
-	m := new(Map)
-	m.bypass = make(map[string]bool)
-	m.blocked = make(map[string]bool)
-	return m
-}
-
-func (m *Map) parse(r io.Reader){
+func (c *CoreAdBlock) parseHosts(r io.Reader){
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Bytes()
@@ -46,8 +38,7 @@ func (m *Map) parse(r io.Reader){
 		if len(f) != 2 {
 			continue
 		}
-		m.blocked[string(f[1])] = true
-		m.nBlocked ++
+		c.BlockList[string(f[1])] = true
 	}
 }
 
