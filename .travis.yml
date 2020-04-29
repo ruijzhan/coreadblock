@@ -1,6 +1,11 @@
 language: go
 
+go:
+  - "1.14.2"
+  
+ env:
+  - GO111MODULE=on
+
 script:
-  - go get
-  - go test -v
+  - go test -v -mod=vendor ./...
 
