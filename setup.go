@@ -40,8 +40,8 @@ func setup(c *caddy.Controller) error  {
 	return nil
 }
 
-func adblockParse(c *caddy.Controller) (CoreAdBlock, error) {
-	a := CoreAdBlock{
+func adblockParse(c *caddy.Controller) (*CoreAdBlock, error) {
+	a := &CoreAdBlock{
 		Exceptions: make(map[string]bool),
 		Urls: []string{},
 		BlockList: make(map[string]bool),
@@ -60,7 +60,7 @@ func adblockParse(c *caddy.Controller) (CoreAdBlock, error) {
     		case "ip":
     			a.ResolveIP = c.RemainingArgs()[0]
     		default:
-    			return CoreAdBlock{}, fmt.Errorf("unrecognized parameter %v", p)
+    			return &CoreAdBlock{}, fmt.Errorf("unrecognized parameter %v", p)
     		}
 		}
 	}

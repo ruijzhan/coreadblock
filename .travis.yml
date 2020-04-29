@@ -7,5 +7,6 @@ env:
   - GO111MODULE=on
 
 script:
+  - go mod vendor
   - go test -v -mod=vendor -bench=. ./...
 

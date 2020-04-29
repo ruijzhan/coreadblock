@@ -30,7 +30,7 @@ type CoreAdBlock struct {
 	BlockList   map[string]bool
 }
 
-func (c CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
+func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
 
@@ -60,7 +60,7 @@ func (c CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.
 	return dns.RcodeSuccess, nil
 }
 
-func (c CoreAdBlock) Name() string { return PLUGIN_NAME }
+func (c *CoreAdBlock) Name() string { return PLUGIN_NAME }
 
 func a(zone string, ttl uint32, ips []net.IP) []dns.RR {
 	answers := make([]dns.RR, len(ips))
