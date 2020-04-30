@@ -34,9 +34,14 @@ type CoreAdBlock struct {
 	Exceptions  map[string]bool
 	BlockList   map[string]bool
 	Bloom       *bloom.BloomFilter
+	Ready       bool
 }
 
 func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
+	if !c.Ready {
+		return plugin.NextOrFailure(c.Name(), c.Next, ctx, w, r)
+	}
+
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
 
@@ -75,6 +80,7 @@ func (c *CoreAdBlock) LoadRules() error {
 			return err
 		}
 	}
+	c.Ready = true
 	return nil
 }
 

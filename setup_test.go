@@ -1,9 +1,8 @@
 package coreadblock
 
 import (
-	"testing"
-
 	"github.com/caddyserver/caddy"
+	"testing"
 )
 
 var corefile =

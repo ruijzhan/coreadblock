@@ -20,9 +20,7 @@ func setup(c *caddy.Controller) error  {
 		log.Fatalf("%v", err)
 	}
 
-    if err := a.LoadRules(); err != nil {
-    	return err
-	}
+    go a.LoadRules()
 
 	c.OnStartup(func() error {
 		once.Do(func() {
