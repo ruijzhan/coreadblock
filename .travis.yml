@@ -1,5 +1,9 @@
 language: go
 
+arch:
+  - amd64
+  - arm64
+
 go:
   - "1.14.2"
   
@@ -8,4 +12,5 @@ env:
 
 script:
   - go mod vendor
-  - go test -v -mod=vendor -bench=. ./...
+  - go test -mod=vendor -bench=. ./...
+
