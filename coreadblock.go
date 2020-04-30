@@ -39,11 +39,14 @@ type CoreAdBlock struct {
 
 func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
 	if !c.Ready {
+		log.Info("Plugin not Ready")
 		return plugin.NextOrFailure(c.Name(), c.Next, ctx, w, r)
 	}
 
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
+	log.Infof("%d entries in blacklist", len(c.BlockList))
+	log.Infof("Received qname %d", qname)
 
 	var answers []dns.RR
 
@@ -51,6 +54,7 @@ func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 		if c.Exceptions[qname] {
 			// do nothing
 		} else if c.Bloom.Test([]byte(qname)) {
+			log.Infof("Filtered %s", qname)
 			ips := []net.IP{net.ParseIP(c.ResolveIP)}
 			answers = a(qname, 3600, ips)
 		}
