@@ -46,7 +46,7 @@ func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
 	log.Infof("%d entries in blacklist", len(c.BlockList))
-	log.Infof("Received qname %d", qname)
+	log.Infof("Received qname %s", qname)
 
 	var answers []dns.RR
 
