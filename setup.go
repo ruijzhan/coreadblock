@@ -6,6 +6,7 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
+	"github.com/ruijzhan/bloom"
 )
 
 func init()  {
@@ -18,10 +19,9 @@ func setup(c *caddy.Controller) error  {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	for _, url := range a.Urls {
-		if err := a.parseHostsURL(url); err != nil{
-			log.Warningf("Failed to parse url %v because %v", url, err )
-		}
+
+    if err := a.LoadRules(); err != nil {
+    	return err
 	}
 
 	c.OnStartup(func() error {
@@ -45,7 +45,8 @@ func adblockParse(c *caddy.Controller) (*CoreAdBlock, error) {
 		Exceptions: make(map[string]bool),
 		Urls: []string{},
 		BlockList: make(map[string]bool),
-		ResolveIP: "127.0.0.1"}
+		ResolveIP: "127.0.0.1",
+	    Bloom: bloom.New(BLOOM_SIZE, HASH_SIZE)}
 
 	for c.Next() {
 		for c.NextBlock() {

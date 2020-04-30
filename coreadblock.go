@@ -12,9 +12,14 @@ import (
 
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 	"github.com/miekg/dns"
+	"github.com/ruijzhan/bloom"
 )
 
-const PLUGIN_NAME = "coreadblock"
+const (
+	PLUGIN_NAME = "coreadblock"
+	BLOOM_SIZE  = 50000 * 20
+	HASH_SIZE   = 5
+)
 
 var (
 	out io.Writer = os.Stdout
@@ -28,6 +33,7 @@ type CoreAdBlock struct {
 	ResolveIP   string
 	Exceptions  map[string]bool
 	BlockList   map[string]bool
+	Bloom       *bloom.BloomFilter
 }
 
 func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error)  {
@@ -39,7 +45,7 @@ func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 	if state.QType() == dns.TypeA {
 		if c.Exceptions[qname] {
 			// do nothing
-		} else if c.BlockList[qname] {
+		} else if c.Bloom.Test([]byte(qname)) {
 			ips := []net.IP{net.ParseIP(c.ResolveIP)}
 			answers = a(qname, 3600, ips)
 		}
@@ -61,6 +67,16 @@ func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 }
 
 func (c *CoreAdBlock) Name() string { return PLUGIN_NAME }
+
+func (c *CoreAdBlock) LoadRules() error {
+	for _, url := range c.Urls {
+		if err := c.parseHostsURL(url); err != nil{
+			log.Warningf("Failed to parse url %v because %v", url, err )
+			return err
+		}
+	}
+	return nil
+}
 
 func a(zone string, ttl uint32, ips []net.IP) []dns.RR {
 	answers := make([]dns.RR, len(ips))

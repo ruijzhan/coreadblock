@@ -9,4 +9,3 @@ env:
 script:
   - go mod vendor
   - go test -v -mod=vendor -bench=. ./...
-

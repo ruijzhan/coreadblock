@@ -39,6 +39,7 @@ func (c *CoreAdBlock) parseHosts(r io.Reader){
 			continue
 		}
 		c.BlockList[string(f[1])] = true
+		c.Bloom.Add([]byte(string(f[1])))
 	}
 }
 
