@@ -17,7 +17,7 @@ func TestCoreAdBlock(t *testing.T) {
 	defer rc.Close()
 	c := caddy.NewTestController("dns", corefile)
 	a, err := adblockParse(c)
-	a.Ready = true
+	a.ready = true
     a.parseHosts(rc)
 	if err != nil {
 		t.Fatalf("Expected no error, but got %v", err)
@@ -59,7 +59,7 @@ func benchmarkResolv(b *testing.B, hosts io.ReadCloser){
 	c := caddy.NewTestController("dns", corefile)
 	a, err := adblockParse(c)
 	a.parseHosts(hosts)
-	a.Ready = true
+	a.ready = true
 	if err != nil {
 		b.Fatalf("Expected no error, but got %v", err)
 	}
