@@ -7,6 +7,7 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 	"github.com/ruijzhan/bloom"
+	"sync"
 )
 
 func init()  {
@@ -42,7 +43,7 @@ func adblockParse(c *caddy.Controller) (*CoreAdBlock, error) {
 	a := &CoreAdBlock{
 		Exceptions: make(map[string]bool),
 		Urls: []string{},
-		BlockList: make(map[string]bool),
+		BlockList: new(sync.Map),
 		ResolveIP: "127.0.0.1",
 	    Bloom: bloom.New(BLOOM_SIZE, HASH_SIZE)}
 

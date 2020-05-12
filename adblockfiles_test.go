@@ -26,8 +26,9 @@ func TestParseHosts(t *testing.T)  {
 	adblk.parseHosts(hostsSample55k())
 
 	//t.Logf("Parsed %d entries", len(adblk.BlockList))
-	if !adblk.BlockList["cdn.3lift.com"] {
-		t.Fatalf("Expected cdn.3lift.com in blocked list, but no")
+	//if !adblk.BlockList["cdn.3lift.com"] {
+	if _, ok:=adblk.BlockList.Load("cdn.3lift.com"); !ok {
+			t.Fatalf("Expected cdn.3lift.com in blocked list, but no")
 	}
 	if !adblk.Exceptions["www.qiudog.top"] {
 		t.Fatalf("Expected www.qiudog.top in exception list, but no")

@@ -23,10 +23,11 @@ func TestCoreAdBlock(t *testing.T) {
 		t.Fatalf("Expected no error, but got %v", err)
 	}
 
-	keys := make([]string, 0, len(a.BlockList))
-	for k, _ := range a.BlockList {
-		keys = append(keys, k)
-	}
+	keys := []string{}
+	a.BlockList.Range(func(k, _ interface{}) bool {
+		keys = append(keys, k.(string))
+		return true
+	})
 
 	ctx := context.TODO()
 	for _, k := range keys {
@@ -64,10 +65,11 @@ func benchmarkResolv(b *testing.B, hosts io.ReadCloser){
 		b.Fatalf("Expected no error, but got %v", err)
 	}
 
-	keys := make([]string, len(a.BlockList))
-	for k, _ := range a.BlockList {
-		keys = append(keys, k)
-	}
+	keys := []string{}
+	a.BlockList.Range(func(k, _ interface{}) bool {
+		keys = append(keys, k.(string))
+		return true
+	})
 
 	ctx := context.TODO()
 	r := new(dns.Msg)

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/coredns/coredns/plugin"
 
@@ -32,7 +33,7 @@ type CoreAdBlock struct {
 	Urls		[]string
 	ResolveIP   string
 	Exceptions  map[string]bool
-	BlockList   map[string]bool
+	BlockList   *sync.Map
 	Bloom       *bloom.BloomFilter
 	ready       bool
 }
@@ -45,18 +46,18 @@ func (c *CoreAdBlock) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns
 
 	state := request.Request{W:w, Req: r}
 	qname := state.Name()
-	log.Infof("%d entries in blacklist", len(c.BlockList))
-	log.Infof("Received qname %s", qname)
+	//log.Infof("%d entries in blacklist", len(c.BlockList))
 
 	var answers []dns.RR
 
 	if state.QType() == dns.TypeA {
 		if c.Exceptions[qname] {
 			// do nothing
-		} else if c.Bloom.Test([]byte(qname)) {
-			log.Infof("Filtered %s", qname)
-			ips := []net.IP{net.ParseIP(c.ResolveIP)}
-			answers = a(qname, 3600, ips)
+		} else {
+			if _, ok := c.BlockList.Load(qname); ok {
+				ips := []net.IP{net.ParseIP(c.ResolveIP)}
+				answers = a(qname, 3600, ips)
+			}
 		}
 	}
 
